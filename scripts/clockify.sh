@@ -115,7 +115,7 @@ cmd_push() {
 
   local PROJECT_MAP="$SKILL_DIR/data/project-name-id-map.json"
   if [ ! -f "$PROJECT_MAP" ]; then
-    echo "ERROR: project-name-id-map.json not found. Run 'clockify.sh projects' first." >&2
+    echo "ERROR: project-name-id-map.json not found. Run 'clockify.sh projects' first to create it." >&2
     exit 1
   fi
 

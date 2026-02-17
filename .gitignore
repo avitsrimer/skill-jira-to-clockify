@@ -2,3 +2,5 @@
 !.tmp/.gitkeep
 data/.env
 data/*.local.json
+data/parent-project-map.json
+data/project-name-id-map.json

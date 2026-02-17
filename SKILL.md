@@ -78,14 +78,14 @@ bash $SKILL_DIR/scripts/clockify.sh projects
 Output: `$SKILL_DIR/.tmp/clockify-projects.csv` (columns: `project_id,project_name`)
 
 Then update `data/project-name-id-map.json`:
-1. Read the current map from `$DATA/project-name-id-map.json`
+1. Read the current map from `$DATA/project-name-id-map.json` (create with `{}` if it doesn't exist)
 2. Read `$TMP/clockify-projects.csv`
 3. Merge any new projects (name → UUID) into the map
 4. Write back to `$DATA/project-name-id-map.json`
 
 ## Step 4: Map Jira parents → Clockify projects
 
-1. Read `$DATA/parent-project-map.json` (Jira parent key → Clockify project name)
+1. Read `$DATA/parent-project-map.json` (create with `{}` if it doesn't exist)
 2. Read `$DATA/project-name-id-map.json` (Clockify project name → UUID)
 3. Extract unique `parent_id + parent_name` pairs from the Jira CSV
 4. For any parent NOT in `parent-project-map.json`:
