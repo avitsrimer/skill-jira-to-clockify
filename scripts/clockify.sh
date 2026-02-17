@@ -101,6 +101,19 @@ cmd_projects() {
 
   TOTAL=$(( $(wc -l < "$PROJECTS_CSV") - 1 ))
   echo "Fetched $TOTAL projects to $PROJECTS_CSV" >&2
+
+  # Merge into project-name-id-map.json (create if missing)
+  local PROJECT_MAP="$SKILL_DIR/data/project-name-id-map.json"
+  [ -f "$PROJECT_MAP" ] || echo '{}' > "$PROJECT_MAP"
+
+  local CSV_MAP
+  CSV_MAP=$(jq -Rs 'split("\n") | .[1:] | map(select(length > 0)) | map(split(",") | {(.[1] | gsub("^\"|\"$"; "")): (.[0] | gsub("^\"|\"$"; ""))}) | add // {}' "$PROJECTS_CSV")
+
+  jq -s '.[0] * .[1]' "$PROJECT_MAP" - <<< "$CSV_MAP" > "${PROJECT_MAP}.tmp" \
+    && mv "${PROJECT_MAP}.tmp" "$PROJECT_MAP"
+
+  MAP_TOTAL=$(jq 'length' "$PROJECT_MAP")
+  echo "Updated $PROJECT_MAP ($MAP_TOTAL projects)" >&2
   echo "$PROJECTS_CSV"
 }
 

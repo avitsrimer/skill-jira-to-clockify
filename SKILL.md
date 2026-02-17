@@ -75,13 +75,7 @@ Run:
 bash $SKILL_DIR/scripts/clockify.sh projects
 ```
 
-Output: `$SKILL_DIR/.tmp/clockify-projects.csv` (columns: `project_id,project_name`)
-
-Then update `data/project-name-id-map.json`:
-1. Read the current map from `$DATA/project-name-id-map.json` (create with `{}` if it doesn't exist)
-2. Read `$TMP/clockify-projects.csv`
-3. Merge any new projects (name → UUID) into the map
-4. Write back to `$DATA/project-name-id-map.json`
+This fetches all projects, writes CSV to `$TMP/clockify-projects.csv`, and automatically merges into `$DATA/project-name-id-map.json` (creates it with `{}` on first run).
 
 ## Step 4: Map Jira parents → Clockify projects
 
