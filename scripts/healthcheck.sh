@@ -15,7 +15,7 @@ if [ ! -f "$ENV_FILE" ]; then
   echo "  Get your key from: https://app.clockify.me/user/preferences#advanced" >&2
   ERRORS=$((ERRORS + 1))
 else
-  source "$ENV_FILE"
+  CLOCKIFY_API_KEY=$(grep '^CLOCKIFY_API_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2-)
   if [ -z "${CLOCKIFY_API_KEY:-}" ] || [ "$CLOCKIFY_API_KEY" = "your-api-key-here" ]; then
     echo "  FAIL: CLOCKIFY_API_KEY is not set in data/.env" >&2
     ERRORS=$((ERRORS + 1))

@@ -8,12 +8,12 @@ CONFIG_FILE="$SKILL_DIR/.tmp/clockify-config.json"
 PROJECTS_CSV="$SKILL_DIR/.tmp/clockify-projects.csv"
 BASE_URL="https://api.clockify.me/api/v1"
 
-# Load API key
+# Load API key (safe parsing — no source to avoid arbitrary code execution)
 if [ ! -f "$ENV_FILE" ]; then
   echo "ERROR: $ENV_FILE not found. Copy data/.env.example to data/.env and add your API key." >&2
   exit 1
 fi
-source "$ENV_FILE"
+CLOCKIFY_API_KEY=$(grep '^CLOCKIFY_API_KEY=' "$ENV_FILE" | head -1 | cut -d= -f2-)
 
 if [ -z "${CLOCKIFY_API_KEY:-}" ] || [ "$CLOCKIFY_API_KEY" = "your-api-key-here" ]; then
   echo "ERROR: CLOCKIFY_API_KEY is not set. Edit data/.env with your key." >&2
@@ -104,31 +104,6 @@ cmd_projects() {
   echo "$PROJECTS_CSV"
 }
 
-cmd_create_entry() {
-  load_config
-  local START_ISO="$1"
-  local END_ISO="$2"
-  local PROJECT_ID="$3"
-  local DESCRIPTION="$4"
-
-  BODY=$(jq -n \
-    --arg start "$START_ISO" \
-    --arg end "$END_ISO" \
-    --arg pid "$PROJECT_ID" \
-    --arg desc "$DESCRIPTION" \
-    '{start: $start, end: $end, projectId: $pid, description: $desc}')
-
-  RESPONSE=$(api POST "/workspaces/$WORKSPACE_ID/time-entries" -d "$BODY")
-
-  ENTRY_ID=$(echo "$RESPONSE" | jq -r '.id // empty')
-  if [ -z "$ENTRY_ID" ]; then
-    echo "ERROR: Failed to create entry. Response: $RESPONSE" >&2
-    return 1
-  fi
-  echo "Created: $DESCRIPTION ($START_ISO)" >&2
-  echo "$ENTRY_ID"
-}
-
 cmd_push() {
   load_config
   local ENTRIES_FILE="${1:-$SKILL_DIR/.tmp/clockify-entries.json}"
@@ -145,6 +120,10 @@ cmd_push() {
   fi
 
   TOTAL=$(jq 'length' "$ENTRIES_FILE")
+  if [ "$TOTAL" -eq 0 ]; then
+    echo "No entries to push." >&2
+    return 0
+  fi
   echo "Pushing $TOTAL entries to Clockify..." >&2
 
   CREATED=0
@@ -185,6 +164,7 @@ cmd_push() {
       echo "[$((i+1))/$TOTAL] Created: $DESCRIPTION ($DATE)" >&2
       CREATED=$((CREATED + 1))
     fi
+    sleep 0.05
   done
 
   echo "" >&2
@@ -199,15 +179,13 @@ case "$COMMAND" in
   discover)     cmd_discover ;;
   last-entry)   cmd_last_entry ;;
   projects)     cmd_projects ;;
-  create-entry) cmd_create_entry "$@" ;;
   push)         cmd_push "$@" ;;
   *)
-    echo "Usage: clockify.sh {discover|last-entry|projects|create-entry|push}" >&2
-    echo "  discover                                         — fetch user/workspace IDs" >&2
-    echo "  last-entry                                       — print date of most recent entry" >&2
-    echo "  projects                                         — fetch all projects to CSV" >&2
-    echo "  create-entry <start-iso> <end-iso> <project-id> <description>" >&2
-    echo "  push [entries-file]                              — push all entries from JSON file" >&2
+    echo "Usage: clockify.sh {discover|last-entry|projects|push}" >&2
+    echo "  discover      — fetch user/workspace IDs" >&2
+    echo "  last-entry    — print date of most recent entry" >&2
+    echo "  projects      — fetch all projects to CSV" >&2
+    echo "  push [file]   — push all entries from JSON file" >&2
     exit 1
     ;;
 esac

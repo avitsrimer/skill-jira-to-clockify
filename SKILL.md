@@ -18,9 +18,16 @@ TMP=$SKILL_DIR/.tmp
 DATA=$SKILL_DIR/data
 ```
 
-## Step 1: Healthcheck
+## Step 0: Healthcheck & cleanup
 
-Run:
+Clean up any leftover temp files from a previous run:
+```bash
+find $SKILL_DIR/.tmp -type f ! -name '.gitkeep' -delete
+```
+
+> **Re-running after failure:** If a previous run failed partway through, simply re-run the skill from the start. This cleanup step ensures a clean slate — no duplicate entries will be created since `.tmp/clockify-entries.json` is wiped before a new run builds it.
+
+Run healthcheck:
 ```bash
 bash $SKILL_DIR/scripts/healthcheck.sh
 ```
@@ -36,7 +43,7 @@ bash $SKILL_DIR/scripts/clockify.sh discover
 
 Config saved to `.tmp/clockify-config.json`. Confirm user/workspace to the user.
 
-## Step 2: Find start date from Clockify
+## Step 1: Find start date from Clockify
 
 Run:
 ```bash
@@ -50,7 +57,7 @@ Returns the date of the most recent Clockify time entry.
 
 Present dates to user for confirmation via **AskUserQuestion** before proceeding.
 
-## Step 3: Collect Jira worklogs
+## Step 2: Collect Jira worklogs
 
 Run:
 ```bash
@@ -61,7 +68,7 @@ Output: `$SKILL_DIR/.tmp/jira-timesheet.csv`
 
 Read the CSV and show the user a summary (ticket count, date range, total hours).
 
-## Step 4: Fetch Clockify projects & update local map
+## Step 3: Fetch Clockify projects & update local map
 
 Run:
 ```bash
@@ -76,7 +83,7 @@ Then update `data/project-name-id-map.json`:
 3. Merge any new projects (name → UUID) into the map
 4. Write back to `$DATA/project-name-id-map.json`
 
-## Step 5: Map Jira parents → Clockify projects
+## Step 4: Map Jira parents → Clockify projects
 
 1. Read `$DATA/parent-project-map.json` (Jira parent key → Clockify project name)
 2. Read `$DATA/project-name-id-map.json` (Clockify project name → UUID)
@@ -89,7 +96,7 @@ Then update `data/project-name-id-map.json`:
 
 For tickets with no parent, use the ticket key itself as the "parent" for mapping purposes.
 
-## Step 6: Build daily time table
+## Step 5: Build daily time table
 
 Read the Jira CSV and build a day-by-day breakdown:
 
@@ -150,7 +157,7 @@ After user approves the table, write all entries to `$TMP/clockify-entries.json`
 
 **`project` must match a key in `data/project-name-id-map.json` exactly.** The push script resolves project names to IDs automatically.
 
-## Step 7: Push entries to Clockify
+## Step 6: Push entries to Clockify
 
 Run:
 ```bash
@@ -159,7 +166,7 @@ bash $SKILL_DIR/scripts/clockify.sh push
 
 This reads `$TMP/clockify-entries.json`, resolves project names → IDs via `data/project-name-id-map.json`, and creates all time entries via the Clockify API. Progress is printed to stderr.
 
-## Step 8: Cleanup
+## Step 7: Cleanup
 
 Remove all files from `.tmp/` except `.gitkeep`:
 ```bash
