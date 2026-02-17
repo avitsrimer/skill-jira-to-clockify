@@ -1,0 +1,4 @@
+.tmp/*
+!.tmp/.gitkeep
+data/.env
+data/*.local.json
