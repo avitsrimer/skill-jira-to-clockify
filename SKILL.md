@@ -18,18 +18,23 @@ TMP=$SKILL_DIR/.tmp
 DATA=$SKILL_DIR/data
 ```
 
-## Step 1: Check Clockify credentials
+## Step 1: Healthcheck
 
 Run:
+```bash
+bash $SKILL_DIR/scripts/healthcheck.sh
+```
+
+Checks: Clockify API key in `data/.env`, Jira auth via `acli jira auth status`, and `jq` availability.
+
+If any check fails → show the error and stop. The script prints clear fix instructions.
+
+If all pass → run discovery:
 ```bash
 bash $SKILL_DIR/scripts/clockify.sh discover
 ```
 
-If it fails with missing `.env` → tell user:
-> Copy `data/.env.example` to `data/.env` and add your Clockify API key.
-> Get your key from: https://app.clockify.me/user/preferences#advanced
-
-If it succeeds → config saved to `.tmp/clockify-config.json`. Confirm user/workspace to the user.
+Config saved to `.tmp/clockify-config.json`. Confirm user/workspace to the user.
 
 ## Step 2: Find start date from Clockify
 
