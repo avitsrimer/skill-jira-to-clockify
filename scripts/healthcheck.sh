@@ -30,12 +30,10 @@ if ! command -v acli &>/dev/null; then
   echo "  FAIL: acli not found. Install: brew install atlassian-cli" >&2
   ERRORS=$((ERRORS + 1))
 else
-  JIRA_AUTH=$(acli jira auth status 2>&1)
-  if echo "$JIRA_AUTH" | grep -qi "authenticated"; then
+  if acli jira auth status &>/dev/null; then
     echo "  OK" >&2
   else
     echo "  FAIL: Jira not authenticated. Run: acli jira auth" >&2
-    echo "  $JIRA_AUTH" >&2
     ERRORS=$((ERRORS + 1))
   fi
 fi
